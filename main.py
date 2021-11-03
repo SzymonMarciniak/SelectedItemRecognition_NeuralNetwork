@@ -49,7 +49,7 @@ test_data = test_data.take(round(len(data)*.3))
 test_data = test_data.batch(16)
 test_data = test_data.prefetch(8)
 
-def embedding():
+def embedding_function():
     
     input_ = Input(shape=(105,105,3), name="Input")
 
@@ -66,10 +66,30 @@ def embedding():
     f1 = Flatten()(c4)
     d1 = Dense(4096, activation="sigmoid")(f1)
 
-    return Model(inputs=[input_], outputs=[d1], name="embadding")
+    return Model(inputs=[input_], outputs=[d1], name="embedding")
 
-model = embedding()
-print(model.summary())
+embedding = embedding_function()
+
+class L1Distance(Layer):
+    def __init__(self, trainable=True, name=None, dtype=None, dynamic=False, **kwargs):
+        super().__init__(trainable=trainable, name=name, dtype=dtype, dynamic=dynamic, **kwargs)
+    
+    def call(self, input_embedding, validation_embedding):
+        return tf.math.abs(input_embedding - validation_embedding)
 
 
+def siamese_model():
 
+    input_embedding = Input(shape=(105,105,3), name="Input embadding")
+    validation_embedding = Input(shape=(105,105,3), name="Validation embadding")
+
+    siamese_layer = L1Distance()
+    distance = siamese_layer(embedding(input_embedding), embedding(validation_embedding))
+
+    classifer = Dense(1, activation="sigmoid")(distance)
+
+    return Model(inputs=[input_embedding, validation_embedding], outputs=classifer, name="SiameseNetwork")
+
+s_siamese_model = siamese_model()
+x = s_siamese_model.summary()
+print(x)
