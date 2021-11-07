@@ -24,7 +24,7 @@ negative = tf.data.Dataset.list_files(Negative+'/*.jpg').take(300)
 def preprocessing(file):
     byte_img = tf.io.read_file(file)
     img = tf.io.decode_jpeg(byte_img)
-    img = tf.image.resize(img, (100,100))
+    img = tf.image.resize(img, (105,105))
     img = img /255.0
     return img
 
@@ -54,7 +54,7 @@ test_data = test_data.prefetch(8)
 
 def embedding_function():
     
-    input_ = Input(shape=(100,100,3), name="Input")
+    input_ = Input(shape=(105,105,3), name="Input")
 
     c1 = Conv2D(64, (10,10), activation="relu")(input_)
     m1 = MaxPooling2D(64, (2,2), padding="same")(c1)
@@ -83,8 +83,8 @@ class L1Distance(Layer):
 
 def siamese_model_function():
 
-    input_embedding = Input(shape=(100,100,3), name="Input embadding")
-    validation_embedding = Input(shape=(100,100,3), name="Validation embadding")
+    input_embedding = Input(shape=(105,105,3), name="Input embadding")
+    validation_embedding = Input(shape=(105,105,3), name="Validation embadding")
 
     siamese_layer = L1Distance()
     distance = siamese_layer(embedding(input_embedding), embedding(validation_embedding))
@@ -142,7 +142,7 @@ def training(data, epochs):
             checkpoint.save(file_prefix=checkpoint_prefix)
 
 epochs = 50
-#training(train_data, epochs)
+training(train_data, epochs)
 
 test_input, test_val, y_true = test_data.as_numpy_iterator().next()
 #y_pred = siamese_model.predict([test_input, test_val])
